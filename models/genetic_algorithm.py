@@ -1,7 +1,8 @@
 import numpy as np
 
-class GeneticAlgorithmRosenbrock:
-    def __init__(self, pop_size=50, mutation_rate=0.1, generations=100, x_bounds=(-2, 2), y_bounds=(-1, 3)):
+class GeneticAlgorithm:
+    def __init__(self, func, pop_size=50, mutation_rate=0.1, generations=100, x_bounds=(-2, 2), y_bounds=(-1, 3)):
+        self.func = func
         self.pop_size = pop_size
         self.mutation_rate = mutation_rate
         self.generations = generations

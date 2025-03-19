@@ -32,7 +32,7 @@ layout = dbc.Container([
                     dbc.Button("Запустить", id="qp-run-button", color="primary", className="w-100"),
                 ])
             ]),
-            html.H4("Результаты", className="mt-2 text-white"),
+            html.H4("Выполнение и результаты", className="mt-2 text-white"),
             html.Div(id="qp-results", className="p-3 rounded mb-3 bg-secondary text-white",
                      style={'height': '150px', 'overflowY': 'scroll'}),
         ], md=4, className="offset-md-2"),

@@ -35,7 +35,7 @@ layout = dbc.Container([
                             style = {'flex' : '1'}
                         )
                     ], className='mb-2 text-dark'),
-                    dbc.Button("Выполнить", id='run-button', color='primary', className='mt-3 w-100')
+                    dbc.Button("Запустить", id='run-button', color='primary', className='mt-3 w-100')
                 ])
             ]),
             html.H4("Выполнение и результаты", className="mt-2 text-white"),
