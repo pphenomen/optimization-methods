@@ -15,7 +15,8 @@ app.layout = html.Div([
 @app.callback(Output("page-content", "children"), Input("url", "pathname"))
 def display_page(pathname):
     return {
-        "/lr1": lr1_page.layout
+        "/lr1": lr1_page.layout,
+        "/lr2": lr2_page.layout
     }.get(pathname, main_page.layout)
 
 register_all_callbacks(app)
