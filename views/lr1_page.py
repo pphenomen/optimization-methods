@@ -35,21 +35,21 @@ layout = dbc.Container([
                             style = {'flex' : '1'}
                         )
                     ], className='mb-2 text-dark'),
-                    dbc.Button("Запустить", id='run-button', color='primary', className='mt-3 w-100')
+                    dbc.Button("Запустить", id='run-button', color='primary', className='mt-3 w-100'),
+                    dcc.Interval(id='animation-interval', interval=500, n_intervals=0, disabled=True),
+                        html.Div(id='animation-controls',  children=[
+                            dbc.Button("Пауза", id='pause-button', color='primary', className='mt-2 w-100'),
+                            dcc.Slider(
+                                id='animation-speed',
+                                min=100,
+                                max=2000,
+                                step=100,
+                                value=500,
+                                marks={100: 'Быстро', 1000: 'Средне', 2000: 'Медленно'},
+                                className='mt-2'
+                            )
+                        ]),
                 ])
-            ]),
-            dcc.Interval(id='animation-interval', interval=500, n_intervals=0, disabled=True),
-            html.Div(id='animation-controls', style={'display': 'none'}, children=[
-                dbc.Button("Пауза", id='pause-button', color='primary', className='mt-2 w-100'),
-                dcc.Slider(
-                    id='animation-speed',
-                    min=100,
-                    max=2000,
-                    step=100,
-                    value=500,
-                    marks={100: 'Быстро', 1000: 'Средне', 2000: 'Медленно'},
-                    className='mt-2'
-                )
             ]),
             html.H4("Выполнение и результаты", className="mt-2 text-white"),
             html.Div(id='execution-results', className='p-3 rounded mb-3 bg-secondary text-white', 
