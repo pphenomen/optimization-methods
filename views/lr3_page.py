@@ -25,7 +25,37 @@ layout = dbc.Container([
                             style = {'flex' : '1'}
                         )
                     ], className='mb-2 text-dark'),
-                    dbc.Button("Запустить", id='ga-run-button', color='primary', className='mt-3 w-100')
+                    dbc.Button("Запустить", id='ga-run-button', color='primary', className='mt-3 w-100'),
+                    dbc.Toast(
+                        "Сначала запустите алгоритм",
+                        id="ga-toast",
+                        header="Предупреждение",
+                        is_open=False,
+                        dismissable=True,
+                        icon="warning",
+                        duration=3000,
+                        style={
+                            "position": "fixed",
+                            "top": "50%",
+                            "left": "50%",
+                            "transform": "translate(-50%, -50%)",
+                            "zIndex": 9999,
+                            "width": "auto"
+                        }
+                    ),
+                    dcc.Interval(id='ga-interval', interval=500, n_intervals=0, disabled=True),
+                        html.Div(id='ga-animation-controls', children=[
+                            dbc.Button(id='ga-pause-button', children="Пауза", color='primary', className='mt-2 w-100'),
+                            dcc.Slider(
+                                id='ga-animation-speed',
+                                min=200,
+                                max=2000,
+                                step=100,
+                                value=500,
+                                marks={200: 'Быстро', 1000: 'Средне', 2000: 'Медленно'},
+                                className='mt-2'
+                            )
+                        ])
                 ])
             ]),
             html.H4("Выполнение и результаты", className="mt-2 text-white"),

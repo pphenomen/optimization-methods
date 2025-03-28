@@ -40,28 +40,40 @@ layout = dbc.Container([
                         html.Pre("x₁ + x₂ ≤ 1\n2x₁ + 3x₂ ≤ 4\nx₁ ≥ 0, x₂ ≥ 0", className="text-white")
                     ], className="mb-3"),
                     dbc.Button("Запустить", id="qp-run-button", color="primary", className="w-100", n_clicks=0),
+                    dbc.Toast(
+                        "Сначала запустите алгоритм",
+                        id="qp-toast",
+                        header="Предупреждение",
+                        is_open=False,
+                        dismissable=True,
+                        icon="warning",
+                        duration=3000,
+                        style={
+                            "position": "fixed",
+                            "top": "50%",
+                            "left": "50%",
+                            "transform": "translate(-50%, -50%)",
+                            "zIndex": 9999,
+                            "width": "auto"
+                        }
+                    ),
                     dcc.Interval(id="interval-component", interval=500, n_intervals=0, disabled=True),
-                    html.Div(id="qp-animation-controls", children=[
-                        dbc.Button("Пауза", id="qp-pause-button", color="primary", className="mt-2 w-100"),
-                        dcc.Slider(
-                            id="qp-animation-speed",
-                            min=100,
-                            max=2000,
-                            step=100,
-                            value=500,
-                            marks={100: 'Быстро', 1000: 'Средне', 2000: 'Медленно'},
-                            className="mt-2"
-                        )
-                    ]),
+                        html.Div(id="qp-animation-controls", children=[
+                            dbc.Button(id='qp-pause-button', children="Пауза", color='primary', className='mt-2 w-100'),
+                            dcc.Slider(
+                                id="qp-animation-speed",
+                                min=200,
+                                max=2000,
+                                step=100,
+                                value=500,
+                                marks={200: 'Быстро', 1000: 'Средне', 2000: 'Медленно'},
+                                className="mt-2"
+                            )
+                        ]),
                 ])
             ]),
             html.H4("Выполнение и результаты", className="mt-2 text-white"),
-            html.Div(
-                id="qp-results",
-                className="p-3 rounded mb-3 bg-secondary text-white",
-                style={'height': '150px', 'overflowY': 'scroll'},
-                children="Нажмите 'Запустить' для начала решения"
-            ),
+            html.Div(id="qp-results", className="p-3 rounded mb-3 bg-secondary text-white", style={'height': '150px', 'overflowY': 'scroll'},),
         ], md=4, className="offset-md-2"),
     ]),
     dcc.Interval(
