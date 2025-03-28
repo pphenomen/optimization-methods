@@ -23,41 +23,36 @@ def register_lr3_callbacks(app):
          Output("ga-toast", "children")],
         [Input("ga-run-button", "n_clicks"),
          Input("ga-interval", "n_intervals"),
-         Input("ga-pause-button", "n_clicks")],
+         Input("ga-pause-button", "n_clicks"),
+         Input("function-selector", "value")],
         [State("rosenbrock-plot", "figure"),
          State("ga-pop-size", "value"),
          State("ga-mutation-rate", "value"),
          State("ga-generations", "value"),
-         State("ga-interval", "disabled"),
-         State("function-selector", "value")]
+         State("ga-interval", "disabled")]
     )
-    def run_ga(n_clicks, n_intervals, pause_clicks,
-               current_figure, pop_size, mutation_rate, generations,
-               interval_disabled, function_key):
-
+    def run_ga(n_clicks, n_intervals, pause_clicks, function_key, current_figure, pop_size, mutation_rate, generations, interval_disabled):
         ctx = callback_context
         if not ctx.triggered:
             raise dash.exceptions.PreventUpdate
 
         triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
 
-        # Обработка кнопки паузы
         if triggered_id == 'ga-pause-button':
             if not app.ga_state['running']:
-                # Алгоритм не запущен - показываем уведомление
                 return no_update, no_update, no_update, no_update, True, "Сначала запустите алгоритм"
-            
-            # Переключаем состояние паузы
             new_state = not interval_disabled
             return no_update, no_update, no_update, new_state, False, ""
 
-        # Остальная логика остается без изменений
+        if triggered_id == "ga-run-button" and not function_key:
+            return no_update, no_update, no_update, no_update, True, "Пожалуйста, выберите функцию для оптимизации."
+        
         func = FUNCTIONS[function_key]
 
         if triggered_id == 'ga-run-button' and n_clicks:
             ga = GeneticAlgorithm(func=func, pop_size=pop_size,
-                                mutation_rate=mutation_rate,
-                                generations=generations)
+                                  mutation_rate=mutation_rate,
+                                  generations=generations)
             best, history = ga.run()
 
             app.ga_state.update({
@@ -121,9 +116,25 @@ def register_lr3_callbacks(app):
 
             return fig, result_text, no_update, no_update, False, ""
 
+        elif triggered_id == 'function-selector':
+            func = FUNCTIONS[function_key]
+            x = np.linspace(-5, 5, 100)
+            y = np.linspace(-5, 5, 100)
+            X, Y = np.meshgrid(x, y)
+            Z = func(X, Y)
+
+            fig = go.Figure([
+                go.Surface(z=Z, x=X, y=Y, colorscale="Viridis", opacity=0.8)])
+            fig.update_layout(
+                title=FUNCTION_NAMES[function_key],
+                scene=dict(xaxis_title='x', yaxis_title='y', zaxis_title='f(x, y)'),
+                margin=dict(l=0, r=0, b=0, t=40)
+            )
+            
+            return fig, "", False, True, False, ""
+
         return no_update, no_update, no_update, no_update, False, ""
 
-    # Остальные колбэки остаются без изменений
     @app.callback(
         Output("ga-interval", "interval"),
         Input("ga-animation-speed", "value")

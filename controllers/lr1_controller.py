@@ -34,24 +34,42 @@ def register_lr1_callbacks(app):
          State("3d-plot", "figure"),
          State("animation-interval", "disabled")]
     )
-    def update_plot_and_results(run_clicks, n_intervals, pause_clicks,
-                               x0, y0, lr, max_iter, function_key,
-                               current_figure, interval_disabled):
+    def update_plot_and_results(run_clicks, n_intervals, pause_clicks, x0, y0, lr, max_iter, function_key, current_figure, interval_disabled):
         ctx = callback_context
         if not ctx.triggered:
             return no_update, no_update, no_update, no_update, no_update, False, ""
 
         triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
+        
+        if triggered_id == "run-button" and not function_key:
+            return no_update, no_update, no_update, no_update, {}, True, "Пожалуйста, выберите функцию для оптимизации."
+        
+        func = FUNCTIONS[function_key]
 
+        if triggered_id == "function-selector":
+            x = np.linspace(-5, 5, 100)
+            y = np.linspace(-5, 5, 100)
+            X, Y = np.meshgrid(x, y)
+            Z = func(X, Y)
+
+            fig = go.Figure([
+                go.Surface(z=Z, x=X, y=Y, colorscale="Viridis", opacity=0.8)])
+            fig.update_layout(
+                title=FUNCTION_NAMES[function_key],
+                scene=dict(xaxis_title='x', yaxis_title='y', zaxis_title='f(x, y)'),
+                margin=dict(l=0, r=0, b=0, t=40)
+            )
+
+            return fig, no_update, no_update, no_update, False, ""
+        
         if triggered_id == 'pause-button':
             if app.history_store['history'] is None:
                 return no_update, no_update, no_update, no_update, no_update, True, "Сначала запустите алгоритм"
 
             new_state = not interval_disabled
             return no_update, no_update, no_update, new_state, no_update, False, ""
-
+        
         if triggered_id == 'run-button' and run_clicks:
-            func = FUNCTIONS[function_key]
             gd = GradientDescent(func=func, x0=x0, y0=y0, learning_rate=lr, max_iter=max_iter)
             history, converged, message = gd.run()
 
