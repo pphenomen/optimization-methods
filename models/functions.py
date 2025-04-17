@@ -2,6 +2,7 @@ import numpy as np
 
 FUNCTIONS = {
     "sphere": lambda x, y: x**2 + y**2,
+    "himmelblau": lambda x, y: (x**2 + y - 11)**2 + (x + y**2 - 7)**2,
     "booth": lambda x, y: (x + 2*y - 7)**2 + (2*x + y - 5)**2,
     "matyas": lambda x, y: 0.26*(x**2 + y**2) - 0.48*x*y,
     "rosenbrock": lambda x, y: 100 * (y - x**2)**2 + (1 - x)**2,
@@ -13,6 +14,7 @@ FUNCTIONS = {
 
 FUNCTION_NAMES = {
     "sphere": "Функция Сферы",
+    "himmelblau": "Функция Химмельблау",
     "booth": "Функция Бута",
     "matyas": "Функция Матьяса",
     "rosenbrock": "Функция Розенброка",

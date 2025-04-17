@@ -45,7 +45,12 @@ def register_lr4_callbacks(app):
         
         if triggered == "pso-run-button" and not function_key:
             return no_update, no_update, no_update, no_update, True, "Пожалуйста, выберите функцию для оптимизации."
-    
+        
+        if triggered == "pso-pause-button":
+            if not app.pso_state['running']:
+                return no_update, no_update, no_update, no_update, True, "Сначала запустите алгоритм"
+            return no_update, no_update, no_update, not interval_disabled, False, ""
+        
         func = FUNCTIONS[function_key]
 
         if triggered == "function-selector":
@@ -63,11 +68,6 @@ def register_lr4_callbacks(app):
             )
 
             return fig, no_update, no_update, no_update, False, ""
-
-        if triggered == "pso-pause-button":
-            if not app.pso_state['running']:
-                return no_update, no_update, no_update, no_update, True, "Сначала запустите алгоритм"
-            return no_update, no_update, no_update, not interval_disabled, False, ""
 
         if triggered == "pso-run-button" and n_clicks and n_clicks > 0:
             optimizer = ParticleSwarmOptimizer(
