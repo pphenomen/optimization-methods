@@ -62,8 +62,8 @@ def register_lr3_callbacks(app):
                 'function_key': function_key
             })
 
-            x = np.linspace(-2, 2, 100)
-            y = np.linspace(-1, 3, 100)
+            x = np.linspace(-5, 5, 100)
+            y = np.linspace(-5, 5, 100)
             X, Y = np.meshgrid(x, y)
             Z = func(X, Y)
 
