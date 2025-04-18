@@ -20,7 +20,6 @@ def register_lr1_callbacks(app):
          Output("execution-results", "children"),
          Output("run-button", "disabled"),
          Output("animation-interval", "disabled"),
-         Output("animation-controls", "style"),
          Output("toast", "is_open"),
          Output("toast", "children")],
         [Input("run-button", "n_clicks"),
@@ -37,12 +36,12 @@ def register_lr1_callbacks(app):
     def update_plot_and_results(run_clicks, n_intervals, pause_clicks, x0, y0, lr, max_iter, function_key, current_figure, interval_disabled):
         ctx = callback_context
         if not ctx.triggered:
-            return no_update, no_update, no_update, no_update, no_update, False, ""
+            return no_update, no_update, no_update, no_update, False, ""
 
         triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
         
         if triggered_id == "run-button" and not function_key:
-            return no_update, no_update, no_update, no_update, {}, True, "Пожалуйста, выберите функцию для оптимизации."
+            return no_update, no_update, no_update, no_update, True, "Пожалуйста, выберите функцию для оптимизации."
         
         func = FUNCTIONS[function_key]
 
@@ -64,10 +63,10 @@ def register_lr1_callbacks(app):
         
         if triggered_id == 'pause-button':
             if app.history_store['history'] is None:
-                return no_update, no_update, no_update, no_update, no_update, True, "Сначала запустите алгоритм"
+                return no_update, no_update, no_update, no_update, True, "Сначала запустите алгоритм"
 
             new_state = not interval_disabled
-            return no_update, no_update, no_update, new_state, no_update, False, ""
+            return no_update, no_update, no_update, new_state, False, ""
         
         if triggered_id == 'run-button' and run_clicks:
             gd = GradientDescent(func=func, x0=x0, y0=y0, learning_rate=lr, max_iter=max_iter)
@@ -96,7 +95,7 @@ def register_lr1_callbacks(app):
                 margin=dict(l=0, r=0, b=0, t=30)
             )
 
-            return fig, html.P("Запуск анимации...", className="text-white"), True, False, {'display': 'block'}, False, ""
+            return fig, "Запуск анимации...", True, False, False, ""
 
         elif triggered_id == 'animation-interval' and app.history_store['history']:
             history = app.history_store['history']
@@ -110,7 +109,7 @@ def register_lr1_callbacks(app):
                         for step in history
                     ])
                 ]
-                return no_update, final_message, False, True, no_update, False, ""
+                return no_update, final_message, False, True, False, ""
 
             step = history[current_step]
             app.history_store['current_step'] += 1
@@ -139,9 +138,9 @@ def register_lr1_callbacks(app):
                 html.P(f"Норма градиента: {step['grad_norm']:.4f}", className="text-white")
             ]
 
-            return fig, results, no_update, no_update, no_update, False, ""
+            return fig, results, no_update, no_update, False, ""
 
-        return no_update, no_update, no_update, no_update, no_update, False, ""
+        return no_update, no_update, no_update, no_update, False, ""
 
     @app.callback(
         Output("animation-interval", "interval"),

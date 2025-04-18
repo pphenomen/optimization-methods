@@ -21,8 +21,7 @@ def register_lr2_callbacks(app):
          Output("qp-run-button", "disabled"),
          Output("interval-component", "disabled"),
          Output("qp-toast", "is_open"),
-         Output("qp-toast", "children"),
-         Output("qp-animation-controls", "style")],
+         Output("qp-toast", "children")],
         [Input("qp-run-button", "n_clicks"),
          Input("interval-component", "n_intervals"),
          Input("qp-pause-button", "n_clicks")],
@@ -52,10 +51,10 @@ def register_lr2_callbacks(app):
 
         if triggered_id == "qp-pause-button":
             if not app.optimization_state['running']:
-                return no_update, no_update, no_update, no_update, True, "Сначала запустите алгоритм", no_update
+                return no_update, no_update, no_update, no_update, True, "Сначала запустите алгоритм"
             new_state = not interval_disabled
             app.optimization_state['interval_disabled'] = new_state
-            return no_update, no_update, no_update, new_state, False, "", no_update
+            return no_update, no_update, no_update, new_state, False, ""
 
         if triggered_id == "qp-run-button" and n_clicks:
             history = []
@@ -76,7 +75,7 @@ def register_lr2_callbacks(app):
             )
 
             if not result.success:
-                return go.Figure(), html.P(f"Ошибка: {result.message}", className="text-danger"), False, True, False, "", {'display': 'none'}
+                return go.Figure(), html.P(f"Ошибка: {result.message}", className="text-danger"), False, True, False, ""
 
             app.optimization_state.update({
                 'history': history,
@@ -98,7 +97,7 @@ def register_lr2_callbacks(app):
                 margin=dict(l=0, r=0, b=0, t=40)
             )
 
-            return fig, "Запуск оптимизации...", True, False, False, "", {'display': 'block'}
+            return fig, "Запуск оптимизации...", True, False, False, ""
 
         if triggered_id == 'interval-component' and app.optimization_state['running']:
             history = app.optimization_state['history']
@@ -111,7 +110,7 @@ def register_lr2_callbacks(app):
                     html.P(f"Оптимальное решение: x1 = {result.x[0]:.4f}, x2 = {result.x[1]:.4f}"),
                     html.P(f"Значение функции: {result.fun:.4f}"),
                     html.P(f"Итераций: {result.nit}")
-                ]), False, True, False, "", no_update
+                ]), False, True, False, ""
 
             point = history[current_step]
             app.optimization_state['current_step'] += 1
@@ -138,9 +137,9 @@ def register_lr2_callbacks(app):
                 html.P(f"Ограничения: {[f'{c:.2f}' for c in point['constraints']]}"),
             ])
 
-            return fig, result_text, no_update, no_update, False, "", no_update
+            return fig, result_text, no_update, no_update, False, ""
 
-        return no_update, no_update, no_update, no_update, False, "", no_update
+        return no_update, no_update, no_update, no_update, False, ""
 
     @app.callback(
         Output("interval-component", "interval"),

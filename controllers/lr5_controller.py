@@ -168,13 +168,13 @@ def register_lr5_callbacks(app):
                 html.P(f"Итерация: {step_data['step']}/{len(history)}"),
                 html.Hr(),
                 html.P("Элитные:"),
-                *[html.Div(f"  ({b[0]:.2f}, {b[1]:.2f}) → f = {b[2]:.2f}") for b in step_data['elite']],
+                *[html.Div(f"  ({b[0]:.2f}, {b[1]:.2f}) -> f = {b[2]:.2f}") for b in step_data['elite']],
                 html.P("Перспективные:"),
-                *[html.Div(f"  ({b[0]:.2f}, {b[1]:.2f}) → f = {b[2]:.2f}") for b in step_data['selected']],
+                *[html.Div(f"  ({b[0]:.2f}, {b[1]:.2f}) -> f = {b[2]:.2f}") for b in step_data['selected']],
                 html.P("Разведчики:"),
-                *[html.Div(f"  ({b[0]:.2f}, {b[1]:.2f}) → f = {b[2]:.2f}") for b in step_data['scouts']],
+                *[html.Div(f"  ({b[0]:.2f}, {b[1]:.2f}) -> f = {b[2]:.2f}") for b in step_data['scouts']],
                 html.Hr(),
-                html.P(f"Лучшее: ({step_data['best'][0]:.2f}, {step_data['best'][1]:.2f}) → f = {step_data['best'][2]:.2f}")
+                html.P(f"Лучшее: ({step_data['best'][0]:.2f}, {step_data['best'][1]:.2f}) -> f = {step_data['best'][2]:.2f}")
             ]), no_update, no_update, False, ""
 
         return no_update, no_update, no_update, no_update, False, ""
