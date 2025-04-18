@@ -14,61 +14,75 @@ def register_lr1_callbacks(app):
         'message': None,
         'converged': False
     }
-
+    
     @app.callback(
-        [Output("3d-plot", "figure"),
-         Output("execution-results", "children"),
-         Output("run-button", "disabled"),
-         Output("animation-interval", "disabled"),
-         Output("toast", "is_open"),
-         Output("toast", "children")],
-        [Input("run-button", "n_clicks"),
-         Input("animation-interval", "n_intervals"),
-         Input("pause-button", "n_clicks")],
-        [State("x0-input", "value"),
-         State("y0-input", "value"),
-         State("lr-input", "value"),
-         State("maxiter-input", "value"),
-         State("function-selector", "value"),
-         State("3d-plot", "figure"),
-         State("animation-interval", "disabled")]
+    [Output("3d-plot", "figure"),
+     Output("execution-results", "children"),
+     Output("run-button", "disabled"),
+     Output("animation-interval", "disabled"),
+     Output("toast", "is_open"),
+     Output("toast", "children")],
+    [Input("run-button", "n_clicks"),
+     Input("animation-interval", "n_intervals"),
+     Input("pause-button", "n_clicks"),
+     Input("function-selector", "value")],
+    [State("x0-input", "value"),
+     State("y0-input", "value"),
+     State("lr-input", "value"),
+     State("maxiter-input", "value"),
+     State("3d-plot", "figure"),
+     State("animation-interval", "disabled")]
     )
-    def update_plot_and_results(run_clicks, n_intervals, pause_clicks, x0, y0, lr, max_iter, function_key, current_figure, interval_disabled):
+    def update_plot_and_results(run_clicks, n_intervals, pause_clicks, function_key,
+                                x0, y0, lr, max_iter, current_figure, interval_disabled):
+
         ctx = callback_context
         if not ctx.triggered:
-            return no_update, no_update, no_update, no_update, False, ""
+            raise dash.exceptions.PreventUpdate
 
         triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
-        
-        if triggered_id == "run-button" and not function_key:
-            return no_update, no_update, no_update, no_update, True, "Пожалуйста, выберите функцию для оптимизации."
-        
-        func = FUNCTIONS[function_key]
 
         if triggered_id == "function-selector":
+            if app.history_store["history"] is not None and app.history_store["current_step"] < len(app.history_store["history"]):
+                # Прерываем текущий процесс
+                app.history_store = {
+                    'history': None,
+                    'current_step': 0,
+                    'function_key': None,
+                    'message': None,
+                    'converged': False
+                }
+                empty_fig = go.Figure()
+                empty_fig.update_layout(
+                    scene=dict(xaxis_title='x', yaxis_title='y', zaxis_title='f(x, y)'),
+                    margin=dict(l=0, r=0, b=0, t=30)
+                )
+                return empty_fig, "", False, True, True, "Алгоритм остановлен из-за смены функции"
+
+            if function_key is None:
+                return no_update, no_update, no_update, no_update, False, ""
+
+            func = FUNCTIONS[function_key]
             x = np.linspace(-5, 5, 100)
             y = np.linspace(-5, 5, 100)
             X, Y = np.meshgrid(x, y)
             Z = func(X, Y)
 
             fig = go.Figure([
-                go.Surface(z=Z, x=X, y=Y, colorscale="Viridis", opacity=0.8)])
+                go.Surface(z=Z, x=X, y=Y, colorscale="Viridis", opacity=0.8)
+            ])
             fig.update_layout(
                 title=FUNCTION_NAMES[function_key],
                 scene=dict(xaxis_title='x', yaxis_title='y', zaxis_title='f(x, y)'),
                 margin=dict(l=0, r=0, b=0, t=40)
             )
-
             return fig, no_update, no_update, no_update, False, ""
-        
-        if triggered_id == 'pause-button':
-            if app.history_store['history'] is None:
-                return no_update, no_update, no_update, no_update, True, "Сначала запустите алгоритм"
 
-            new_state = not interval_disabled
-            return no_update, no_update, no_update, new_state, False, ""
-        
-        if triggered_id == 'run-button' and run_clicks:
+        if triggered_id == "run-button":
+            if not function_key:
+                return no_update, no_update, no_update, no_update, True, "Пожалуйста, выберите функцию для оптимизации."
+
+            func = FUNCTIONS[function_key]
             gd = GradientDescent(func=func, x0=x0, y0=y0, learning_rate=lr, max_iter=max_iter)
             history, converged, message = gd.run()
 
@@ -88,18 +102,22 @@ def register_lr1_callbacks(app):
             fig = go.Figure(data=[
                 go.Surface(z=Z, x=X, y=Y, colorscale='Viridis', opacity=0.8)
             ])
-
             fig.update_layout(
                 title=f"{FUNCTION_NAMES[function_key]}",
                 scene=dict(xaxis_title='X', yaxis_title='Y', zaxis_title='f(x, y)'),
                 margin=dict(l=0, r=0, b=0, t=30)
             )
 
-            return fig, "Запуск анимации...", True, False, False, ""
+            return fig, html.P("Запуск анимации...", className="text-white"), True, False, False, ""
 
-        elif triggered_id == 'animation-interval' and app.history_store['history']:
-            history = app.history_store['history']
-            current_step = app.history_store['current_step']
+        if triggered_id == "pause-button":
+            if app.history_store["history"] is None:
+                return no_update, no_update, no_update, no_update, True, "Сначала запустите алгоритм"
+            return no_update, no_update, no_update, not interval_disabled, False, ""
+
+        if triggered_id == "animation-interval" and app.history_store["history"]:
+            history = app.history_store["history"]
+            current_step = app.history_store["current_step"]
 
             if current_step >= len(history):
                 final_message = [
@@ -112,7 +130,7 @@ def register_lr1_callbacks(app):
                 return no_update, final_message, False, True, False, ""
 
             step = history[current_step]
-            app.history_store['current_step'] += 1
+            app.history_store["current_step"] += 1
 
             fig = go.Figure(current_figure)
             fig.data = [fig.data[0]]

@@ -24,7 +24,7 @@ def register_lr4_callbacks(app):
     [Input("pso-run-button", "n_clicks"),
      Input("pso-interval", "n_intervals"),
      Input("pso-pause-button", "n_clicks"),
-     Input("function-selector", "value")],
+     Input("pso-function-selector", "value")],
     [State("pso-plot", "figure"),
      State("pso-particles", "value"),
      State("pso-iterations", "value"),
@@ -53,7 +53,21 @@ def register_lr4_callbacks(app):
         
         func = FUNCTIONS[function_key]
 
-        if triggered == "function-selector":
+        if triggered == "pso-function-selector":
+            if app.pso_state["running"]:
+                app.pso_state = {
+                    'history': [],
+                    'current_step': 0,
+                    'running': False,
+                    'function_key': None
+                }
+                empty_fig = go.Figure()
+                empty_fig.update_layout(
+                    scene=dict(xaxis_title='x', yaxis_title='y', zaxis_title='f(x, y)'),
+                    margin=dict(l=0, r=0, b=0, t=30)
+                )
+                return empty_fig, "", False, True, True, "Работа алгоритма остановлена из-за смены функции"
+            
             x = np.linspace(-5, 5, 100)
             y = np.linspace(-5, 5, 100)
             X, Y = np.meshgrid(x, y)

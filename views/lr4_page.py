@@ -22,7 +22,7 @@ layout = dbc.Container([
                     dbc.InputGroup([dbc.InputGroupText("Инерция"), dbc.Input(id='pso-inertia', type='number', value=0.7, step=0.1)], className='mb-2'),
                     dbc.InputGroup([dbc.InputGroupText("Коэфф. когнитивный"), dbc.Input(id='pso-cognitive', type='number', value=1.5, step=0.1)], className='mb-2'),
                     dbc.InputGroup([dbc.InputGroupText("Коэфф. социальный"), dbc.Input(id='pso-social', type='number', value=2.0, step=0.1)], className='mb-2'),
-                    dbc.InputGroup([create_function_dropdown("function-selector")], className='mb-2 text-dark'),
+                    dbc.InputGroup([create_function_dropdown("pso-function-selector")], className='mb-2 text-dark'),
                     dbc.Button("Запустить", id="pso-run-button", color="primary", className="mt-3 w-100"),
                     create_toast("pso-toast"),
                     dcc.Interval(id="pso-interval", interval=500, n_intervals=0, disabled=True),

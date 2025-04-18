@@ -51,6 +51,20 @@ def register_lr5_callbacks(app):
             return no_update, no_update, no_update, not interval_disabled, False, ""
 
         if triggered == "bees-function-selector" and function_key:
+            if app.bees_state["running"]:
+                app.bees_state = {
+                    'history': [],
+                    'current_step': 0,
+                    'running': False,
+                    'function_key': None
+                }
+                empty_fig = go.Figure()
+                empty_fig.update_layout(
+                    scene=dict(xaxis_title='x', yaxis_title='y', zaxis_title='f(x, y)'),
+                    margin=dict(l=0, r=0, b=0, t=30)
+                )
+                return empty_fig, "", False, True, True, "Работа алгоритма остановлена из-за смены функции"
+
             func = FUNCTIONS[function_key]
             x = np.linspace(-5, 5, 100)
             y = np.linspace(-5, 5, 100)

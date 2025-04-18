@@ -24,7 +24,7 @@ def register_lr3_callbacks(app):
         [Input("ga-run-button", "n_clicks"),
          Input("ga-interval", "n_intervals"),
          Input("ga-pause-button", "n_clicks"),
-         Input("function-selector", "value")],
+         Input("ga-function-selector", "value")],
         [State("rosenbrock-plot", "figure"),
          State("ga-pop-size", "value"),
          State("ga-mutation-rate", "value"),
@@ -116,7 +116,21 @@ def register_lr3_callbacks(app):
 
             return fig, result_text, no_update, no_update, False, ""
 
-        elif triggered_id == 'function-selector':
+        elif triggered_id == 'ga-function-selector':
+            if app.ga_state["running"]:
+                app.ga_state = {
+                    'history': [],
+                    'current_step': 0,
+                    'running': False,
+                    'function_key': None
+                }
+                empty_fig = go.Figure()
+                empty_fig.update_layout(
+                    scene=dict(xaxis_title='x', yaxis_title='y', zaxis_title='f(x, y)'),
+                    margin=dict(l=0, r=0, b=0, t=30)
+                )
+                return empty_fig, "", False, True, True, "Работа алгоритма остановлена из-за смены функции"
+
             func = FUNCTIONS[function_key]
             x = np.linspace(-5, 5, 100)
             y = np.linspace(-5, 5, 100)
