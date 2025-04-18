@@ -21,7 +21,7 @@ layout = dbc.Container([
                     dbc.InputGroup([dbc.InputGroupText("Ставка мутации"), dbc.Input(id='ga-mutation-rate', type='number', value=0.1, step=0.01)], className='mb-2'),
                     dbc.InputGroup([dbc.InputGroupText("Число поколений"), dbc.Input(id='ga-generations', type='number', value=100)], className='mb-2'),
                     dbc.InputGroup([create_function_dropdown("ga-function-selector")], className='mb-2 text-dark'),
-                    dbc.Button("Запустить", id='ga-run-button', color='primary', className='mt-3 w-100'),
+                    dbc.Button("Запустить", id='ga-run-button', color='success', className='mt-3 w-100'),
                     create_toast("ga-toast"),
                     dcc.Interval(id='ga-interval', interval=500, n_intervals=0, disabled=True),
                     create_animation_controls('ga-pause-button', 'ga-animation-speed')

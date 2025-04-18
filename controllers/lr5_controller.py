@@ -75,7 +75,7 @@ def register_lr5_callbacks(app):
                 title=FUNCTION_NAMES[function_key],
                 scene=dict(xaxis_title='x', yaxis_title='y', zaxis_title='f(x, y)'),
                 margin=dict(l=0, r=0, b=0, t=40),
-                legend=dict(x=0, y=0.95, bgcolor='rgba(255,255,255,0.7)', bordercolor='black', borderwidth=1)
+                legend=dict(x=0, y=0.95, bgcolor='rgba(255,255,255,0.7)', bordercolor='black', font=dict(size=16), borderwidth=1)
             )
             return fig, no_update, no_update, no_update, False, ""
 
@@ -113,7 +113,7 @@ def register_lr5_callbacks(app):
                 title=FUNCTION_NAMES[function_key],
                 scene=dict(xaxis_title='x', yaxis_title='y', zaxis_title='f(x, y)'),
                 margin=dict(l=0, r=0, b=0, t=40),
-                legend=dict(x=0, y=0.95, bgcolor='rgba(255,255,255,0.7)', bordercolor='black', borderwidth=1)
+                legend=dict(x=0, y=0.95, bgcolor='rgba(255,255,255,0.7)', bordercolor='black', font=dict(size=16), borderwidth=1)
             )
             return fig, "Запуск пчелиного алгоритма...", True, False, False, ""
 
@@ -152,7 +152,7 @@ def register_lr5_callbacks(app):
                 z=[b[2] for b in step_data['selected']],
                 mode='markers',
                 marker=dict(size=4, color='cyan'),
-                name='Перспективные',
+                name='Перспективные         ',
                 text=[label]*len(step_data['selected']),
                 hoverinfo='text'
             ))

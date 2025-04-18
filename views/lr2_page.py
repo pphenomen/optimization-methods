@@ -24,7 +24,7 @@ layout = dbc.Container([
                         html.P("при условиях:", className="mb-1 text-white"),
                         html.Pre("x₁ + x₂ ≤ 1\n2x₁ + 3x₂ ≤ 4\nx₁ ≥ 0, x₂ ≥ 0", className="text-white")
                     ], className="mb-3"),
-                    dbc.Button("Запустить", id="qp-run-button", color="primary", className="w-100"),
+                    dbc.Button("Запустить", id="qp-run-button", color="success", className="w-100"),
                     create_toast("qp-toast"),
                     dcc.Interval(id="interval-component", interval=500, n_intervals=0, disabled=True),
                     create_animation_controls("qp-pause-button", "qp-animation-speed")

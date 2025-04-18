@@ -22,7 +22,7 @@ layout = dbc.Container([
                     dbc.InputGroup([dbc.InputGroupText("Начальный шаг"), dbc.Input(id='lr-input', type='number', value=0.5, step=0.01)], className='mb-2'),
                     dbc.InputGroup([dbc.InputGroupText("Число итераций"), dbc.Input(id='maxiter-input', type='number', value=100)], className='mb-2'),
                     dbc.InputGroup([create_function_dropdown("function-selector")], className='mb-2 text-dark'),
-                    dbc.Button("Запустить", id='run-button', color='primary', className='mt-3 w-100'),
+                    dbc.Button("Запустить", id='run-button', color='success', className='mt-3 w-100'),
                     create_toast("toast"),
                     dcc.Interval(id='animation-interval', interval=500, n_intervals=0, disabled=True),
                     create_animation_controls('pause-button', 'animation-speed')
