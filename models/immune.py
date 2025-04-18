@@ -1,7 +1,6 @@
 import numpy as np
 import random
 
-
 class ImmuneAlgorithm:
     def __init__(self, func, bounds, n_antibodies=50, n_iterations=200, n_best=10, n_random=10, n_clones=20, mutation_rate=0.2):
         self.func = func
@@ -21,7 +20,7 @@ class ImmuneAlgorithm:
         return np.array([np.random.uniform(low, high) for low, high in self.bounds])
 
     def _evaluate(self, population):
-        return [self.func(ind[0], ind[1]) for ind in population]
+        return [self.func(*ind) for ind in population]
 
     def _clone_and_mutate(self, best):
         clones = []
@@ -49,8 +48,8 @@ class ImmuneAlgorithm:
             random_antibodies = [self._random_solution() for _ in range(self.n_random)]
             population = selected_clones + random_antibodies
 
-            best_solution = min(population, key=lambda x: self.func(x[0], x[1]))
-            best_score = self.func(best_solution[0], best_solution[1])
+            best_solution = min(population, key=lambda x: self.func(*x))
+            best_score = self.func(*best_solution)
 
             self.history.append({
                 'iteration': i,

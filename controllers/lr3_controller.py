@@ -1,7 +1,7 @@
 from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 import numpy as np
-from models.genetic_algorithm import GeneticAlgorithm
+from models.genetic import GeneticAlgorithm
 from models.functions import FUNCTIONS, FUNCTION_NAMES
 from dash import html, no_update, callback_context
 import dash
