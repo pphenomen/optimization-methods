@@ -5,7 +5,7 @@ from models.functions import FUNCTION_NAMES
 layout = dbc.Container([
     dbc.NavbarSimple(
         children=[dbc.Button("Назад", href="/", color="secondary", className="position-absolute", style={"top": "15px", "right": "15px", "zIndex": "1000"})],
-        brand="Алгоритм роя частиц (PSO)",
+        brand="Алгоритм роя частиц",
         color="secondary",
         dark=True,
         brand_style={"fontSize": "26px", "fontWeight": "bold"},
@@ -17,7 +17,7 @@ layout = dbc.Container([
         ], md=6),
         dbc.Col([
             dbc.Card([
-                dbc.CardHeader("Параметры PSO", className="text-center bg-secondary text-white"),
+                dbc.CardHeader("Параметры алгоритма", className="text-center bg-secondary text-white"),
                 dbc.CardBody([
                     dbc.InputGroup([dbc.InputGroupText("Число частиц"), dbc.Input(id='pso-particles', type='number', value=30)], className='mb-2'),
                     dbc.InputGroup([dbc.InputGroupText("Число итераций"), dbc.Input(id='pso-iterations', type='number', value=100)], className='mb-2'),
