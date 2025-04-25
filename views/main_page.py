@@ -25,4 +25,7 @@ layout = dbc.Container([
     dbc.Row([
         dbc.Col(dbc.Button("Лабораторная работа 7", href="/lr7", color="secondary", className="btn-lg d-grid gap-2"), width=6),
     ], className="mt-4 justify-content-center"),
+    dbc.Row([
+        dbc.Col(dbc.Button("Лабораторная работа 8", href="/lr8", color="secondary", className="btn-lg d-grid gap-2"), width=6),
+    ], className="mt-4 justify-content-center"),
 ], className="p-5 bg-dark")
