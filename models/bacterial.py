@@ -21,8 +21,8 @@ class BacterialOptimization:
         return np.array([self.func(*ind) for ind in population])
 
     def _move_bacteria(self, population, scores):
-        best_score = np.min(scores)
-        best_bacteria = population[np.argmin(scores)]
+        best_score = np.max(scores)
+        best_bacteria = population[np.argmax(scores)]
 
         for i in range(self.n_bacteria):
             if scores[i] > best_score:  # раздражение
@@ -48,13 +48,14 @@ class BacterialOptimization:
         for i in range(self.n_iterations):
             scores = self._evaluate(population)
             best_solution = population[np.argmin(scores)]
-            best_score = np.min(scores)
+            best_score = np.max(scores)
 
             population = self._move_bacteria(population, scores)
             population = self._mutate(population)
 
             self.history.append({
                 'iteration': i,
+                'population': population,
                 'best_solution': best_solution,
                 'best_score': best_score
             })

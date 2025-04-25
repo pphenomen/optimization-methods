@@ -6,8 +6,7 @@ from views.page_components import (
     create_function_dropdown,
     create_toast,
     create_animation_controls,
-    create_results_block,
-    create_log_modal
+    create_results_block
 )
 
 layout = dbc.Container([

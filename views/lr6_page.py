@@ -6,8 +6,7 @@ from views.page_components import (
     create_function_dropdown,
     create_toast,
     create_animation_controls,
-    create_results_block,
-    create_log_modal
+    create_results_block
 )
 
 layout = dbc.Container([
@@ -24,7 +23,7 @@ layout = dbc.Container([
                     dbc.InputGroup([dbc.InputGroupText("Случайных антител"), dbc.Input(id='ais-random', type='number', value=10)], className='mb-2'),
                     dbc.InputGroup([dbc.InputGroupText("Клонов на антитело"), dbc.Input(id='ais-clones', type='number', value=20)], className='mb-2'),
                     dbc.InputGroup([dbc.InputGroupText("Коэффициент мутации"), dbc.Input(id='ais-mutation', type='number', value=0.2, step=0.01)], className='mb-2'),
-                    dbc.InputGroup([create_function_dropdown("ais-function-selector")], className='mb-2 text-dark'),
+                    dbc.InputGroup([create_function_dropdown("ais-function-selector", default="rosenbrock")], className='mb-2 text-dark'),
                     dbc.Button("Запустить", id="ais-run-button", color="success", className="mt-3 w-100"),
                     create_toast("ais-toast"),
                     dcc.Interval(id="ais-interval", interval=500, n_intervals=0, disabled=True),

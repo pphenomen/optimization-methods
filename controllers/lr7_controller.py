@@ -1,6 +1,7 @@
 from dash import callback_context, html, no_update
 from dash.dependencies import Input, Output, State
 from models.functions import FUNCTIONS, FUNCTION_NAMES
+from models.bacterial import BacterialOptimization
 import plotly.graph_objs as go
 import numpy as np
 import dash
@@ -61,7 +62,7 @@ def register_lr7_callbacks(app):
                     margin=dict(l=0, r=0, b=0, t=30)
                 )
                 return empty_fig, "", False, True, True, "Работа алгоритма остановлена из-за смены функции"
-            
+
             func = FUNCTIONS[function_key]
             x = np.linspace(-5, 5, 100)
             y = np.linspace(-5, 5, 100)
@@ -79,16 +80,20 @@ def register_lr7_callbacks(app):
         if triggered == "bfoa-run-button":
             if not function_key:
                 return no_update, no_update, no_update, no_update, True, "Пожалуйста, выберите функцию"
-            
-            history = []
-            for i in range(n_iters):
-                history.append({
-                    'iteration': i,
-                    'population': [np.random.uniform(-5, 5, 2) for _ in range(n_bacteria)],
-                    'best': np.random.uniform(-5, 5, 2),
-                    'score': np.random.uniform(0, 10)
-                })
-            
+
+            func = FUNCTIONS[function_key]
+            optimizer = BacterialOptimization(
+                func=func,
+                bounds=((-5, 5), (-5, 5)),
+                n_bacteria=n_bacteria,
+                n_iterations=n_iters,
+                step_size=0.1,
+                mutation_rate=elimination_step/100 if elimination_step else 0.1,
+                attraction=0.5,
+                repulsion=0.5
+            )
+            best, history = optimizer.optimize()
+
             app.bfoa_state.update({
                 'history': history,
                 'current_step': 0,
@@ -96,7 +101,6 @@ def register_lr7_callbacks(app):
                 'function_key': function_key
             })
 
-            func = FUNCTIONS[function_key]
             x = np.linspace(-5, 5, 100)
             y = np.linspace(-5, 5, 100)
             X, Y = np.meshgrid(x, y)
@@ -108,52 +112,52 @@ def register_lr7_callbacks(app):
                 margin=dict(l=0, r=0, b=0, t=40),
                 legend=dict(x=0, y=0.95, bgcolor='rgba(255,255,255,0.7)', font=dict(size=16), bordercolor='black', borderwidth=1)
             )
-            return fig, "Запуск бактериального алгоритма...", True, False, False, ""
+            return fig, "Запуск бактериальной оптимизации...", True, False, False, ""
 
         if triggered == "bfoa-interval" and app.bfoa_state['running']:
             step = app.bfoa_state['current_step']
             history = app.bfoa_state['history']
+
             if step >= len(history):
                 app.bfoa_state['running'] = False
-                best_bacteria = history[-1]['best']
+                best_bacteria = history[-1]['best_solution']
                 return fig, html.Div([
                     html.P(f"Лучшее решение: x = {best_bacteria[0]:.4f}, y = {best_bacteria[1]:.4f}"),
-                    html.P(f"Значение функции f(x, y): {history[-1]['score']:.4f}")
+                    html.P(f"Значение функции f(x, y): {history[-1]['best_score']:.4f}")
                 ]), False, True, False, ""
 
             step_data = history[step]
             app.bfoa_state['current_step'] += 1
-            label = f"Итерация {step_data['iteration']}"
 
             fig = go.Figure(fig)
             fig.data = [trace for trace in fig.data if isinstance(trace, go.Surface)]
 
             fig.add_trace(go.Scatter3d(
-                x=[a[0] for a in step_data['population']],
-                y=[a[1] for a in step_data['population']],
-                z=[FUNCTIONS[app.bfoa_state['function_key']](a[0], a[1]) for a in step_data['population']],
+                x=[p[0] for p in step_data['population']],
+                y=[p[1] for p in step_data['population']],
+                z=[FUNCTIONS[app.bfoa_state['function_key']](p[0], p[1]) for p in step_data['population']],
                 mode='markers',
-                marker=dict(size=4, color='cyan'),
-                name='Бактерии      ',
-                text=[label]*len(step_data['population']),
+                marker=dict(size=5, color='black'),
+                name='Бактерии',
+                text=[f"Итерация {step_data['iteration']}"] * len(step_data['population']),
                 hoverinfo='text'
             ))
 
             fig.add_trace(go.Scatter3d(
-                x=[step_data['best'][0]],
-                y=[step_data['best'][1]],
-                z=[step_data['score']],
+                x=[step_data['best_solution'][0]],
+                y=[step_data['best_solution'][1]],
+                z=[FUNCTIONS[app.bfoa_state['function_key']](*step_data['best_solution'])],
                 mode='markers',
                 marker=dict(size=6, color='gold', symbol='diamond'),
-                name='Лучшая',
-                text=[f'Лучшая на {label}'],
+                name='Лучшая        ',
+                text=[f'Лучшая на итерации {step_data['iteration']}'],
                 hoverinfo='text'
             ))
 
             result_block = html.Div([
                 html.P(f"Итерация: {step_data['iteration'] + 1}/{len(history)}"),
-                html.P(f"Лучшая бактерия: x = {step_data['best'][0]:.4f}, y = {step_data['best'][1]:.4f}"),
-                html.P(f"f(x, y) = {step_data['score']:.4f}")
+                html.P(f"Лучшая бактерия: x = {step_data['best_solution'][0]:.4f}, y = {step_data['best_solution'][1]:.4f}"),
+                html.P(f"f(x, y) = {step_data['best_score']:.4f}")
             ])
 
             return fig, result_block, no_update, no_update, False, ""

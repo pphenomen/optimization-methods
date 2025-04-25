@@ -2,7 +2,6 @@ from dash import dcc, html
 import dash_bootstrap_components as dbc
 from models.functions import FUNCTION_NAMES
 
-
 def create_navbar(title: str, color: str = "secondary"):
     return dbc.NavbarSimple(
         children=[
@@ -17,7 +16,6 @@ def create_navbar(title: str, color: str = "secondary"):
         className="bg-dark",
     )
 
-
 def create_graph(graph_id: str):
     return dcc.Graph(
         id=graph_id,
@@ -25,8 +23,7 @@ def create_graph(graph_id: str):
         style={"height": "98%", "width": "130%"}
     )
 
-
-def create_function_dropdown(dropdown_id: str):
+def create_function_dropdown(dropdown_id: str, default: str = None):
     return dbc.InputGroup([
         dbc.InputGroupText("Функция"),
         dcc.Dropdown(
@@ -34,10 +31,10 @@ def create_function_dropdown(dropdown_id: str):
             options=[{"label": FUNCTION_NAMES[k], "value": k} for k in FUNCTION_NAMES],
             placeholder="Выберите функцию",
             clearable=False,
+            value=default,
             style={"flex": "1"}
         )
     ], className='mb-2 text-dark')
-
 
 def create_toast(toast_id: str, message="Сначала запустите алгоритм"):
     return dbc.Toast(
