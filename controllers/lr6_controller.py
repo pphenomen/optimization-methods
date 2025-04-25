@@ -1,10 +1,12 @@
-from dash import callback_context, html, no_update
+from dash import html, no_update, callback_context
 from dash.dependencies import Input, Output, State
-from models.immune import ImmuneAlgorithm
-from models.functions import FUNCTIONS, FUNCTION_NAMES
 import plotly.graph_objs as go
 import numpy as np
 import dash
+
+from models.immune import ImmuneAlgorithm
+from models.functions import FUNCTIONS, FUNCTION_NAMES
+from controllers.utils import create_surface_figure, handle_pause, get_pause_button_text
 
 def register_lr6_callbacks(app):
     app.ais_state = {
@@ -45,11 +47,9 @@ def register_lr6_callbacks(app):
         fig = fig if fig else go.Figure()
 
         if triggered == "ais-pause-button":
-            if not app.ais_state['running']:
-                return no_update, no_update, no_update, no_update, True, "Сначала запустите алгоритм"
-            return no_update, no_update, no_update, not interval_disabled, False, ""
+            return handle_pause(app.ais_state['running'], interval_disabled)
 
-        if triggered == "ais-function-selector" and function_key:
+        if triggered == "ais-function-selector":
             if app.ais_state["running"]:
                 app.ais_state = {
                     'history': [],
@@ -58,29 +58,18 @@ def register_lr6_callbacks(app):
                     'function_key': None
                 }
                 empty_fig = go.Figure()
-                empty_fig.update_layout(
-                    scene=dict(xaxis_title='x', yaxis_title='y', zaxis_title='f(x, y)'),
-                    margin=dict(l=0, r=0, b=0, t=30)
-                )
-                return empty_fig, "", False, True, True, "Работа алгоритма остановлена из-за смены функции"
-            
-            func = FUNCTIONS[function_key]
-            x = np.linspace(-5, 5, 100)
-            y = np.linspace(-5, 5, 100)
-            X, Y = np.meshgrid(x, y)
-            Z = func(X, Y)
-            fig = go.Figure([go.Surface(z=Z, x=X, y=Y, colorscale="Viridis", opacity=0.8)])
-            fig.update_layout(
-                title=FUNCTION_NAMES[function_key],
-                scene=dict(xaxis_title='x', yaxis_title='y', zaxis_title='f(x, y)'),
-                margin=dict(l=0, r=0, b=0, t=40),
-                legend=dict(x=0, y=0.95, bgcolor='rgba(255,255,255,0.7)', font=dict(size=16), bordercolor='black', borderwidth=1)
-            )
-            return fig, no_update, no_update, no_update, False, ""
+                empty_fig.update_layout(scene=dict(xaxis_title='x', yaxis_title='y', zaxis_title='f(x, y)'), margin=dict(l=0, r=0, b=0, t=30))
+                return empty_fig, "", False, True, True, "Работа остановлена из-за смены функции"
+
+            if function_key:
+                return create_surface_figure(function_key), no_update, no_update, no_update, False, ""
+            else:
+                return no_update, no_update, no_update, no_update, False, ""
 
         if triggered == "ais-run-button":
             if not function_key:
                 return no_update, no_update, no_update, no_update, True, "Пожалуйста, выберите функцию"
+
             func = FUNCTIONS[function_key]
             optimizer = ImmuneAlgorithm(
                 func=func,
@@ -101,33 +90,25 @@ def register_lr6_callbacks(app):
                 'function_key': function_key
             })
 
-            x = np.linspace(-5, 5, 100)
-            y = np.linspace(-5, 5, 100)
-            X, Y = np.meshgrid(x, y)
-            Z = func(X, Y)
-            fig = go.Figure([go.Surface(z=Z, x=X, y=Y, colorscale="Viridis", opacity=0.8)])
-            fig.update_layout(
-                title=FUNCTION_NAMES[function_key],
-                scene=dict(xaxis_title='x', yaxis_title='y', zaxis_title='f(x, y)'),
-                margin=dict(l=0, r=0, b=0, t=40),
-                legend=dict(x=0, y=0.95, bgcolor='rgba(255,255,255,0.7)', font=dict(size=16), bordercolor='black', borderwidth=1)
-            )
+            fig = create_surface_figure(function_key)
             return fig, "Запуск иммунного алгоритма...", True, False, False, ""
 
         if triggered == "ais-interval" and app.ais_state['running']:
             step = app.ais_state['current_step']
             history = app.ais_state['history']
+
             if step >= len(history):
                 app.ais_state['running'] = False
                 best_antibody = history[-1]['best']
+                score = history[-1]['score']
                 return fig, html.Div([
                     html.P(f"Лучшее решение: x = {best_antibody[0]:.4f}, y = {best_antibody[1]:.4f}"),
-                    html.P(f"Значение функции f(x, y): {history[-1]['score']:.4f}")
+                    html.P(f"Значение функции: {score:.4f}")
                 ]), False, True, False, ""
 
             step_data = history[step]
             app.ais_state['current_step'] += 1
-            label = f"Итерация {step_data['iteration']}"
+            func = FUNCTIONS[app.ais_state["function_key"]]
 
             fig = go.Figure(fig)
             fig.data = [trace for trace in fig.data if isinstance(trace, go.Surface)]
@@ -135,12 +116,10 @@ def register_lr6_callbacks(app):
             fig.add_trace(go.Scatter3d(
                 x=[a[0] for a in step_data['population']],
                 y=[a[1] for a in step_data['population']],
-                z=[FUNCTIONS[app.ais_state['function_key']](a[0], a[1]) for a in step_data['population']],
+                z=[func(a[0], a[1]) for a in step_data['population']],
                 mode='markers',
-                marker=dict(size=4, color='cyan'),
-                name='Антитела      ',
-                text=[label]*len(step_data['population']),
-                hoverinfo='text'
+                marker=dict(size=5, color='black'),
+                name='Антитела      '
             ))
 
             fig.add_trace(go.Scatter3d(
@@ -149,9 +128,7 @@ def register_lr6_callbacks(app):
                 z=[step_data['score']],
                 mode='markers',
                 marker=dict(size=6, color='gold', symbol='diamond'),
-                name='Лучшее',
-                text=[f'Лучшее на {label}'],
-                hoverinfo='text'
+                name='Лучшее'
             ))
 
             result_block = html.Div([
@@ -176,4 +153,4 @@ def register_lr6_callbacks(app):
         Input("ais-interval", "disabled")
     )
     def update_pause_label(disabled):
-        return "Продолжить" if disabled else "Пауза"
+        return get_pause_button_text(disabled)

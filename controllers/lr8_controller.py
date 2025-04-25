@@ -1,13 +1,14 @@
-from dash import callback_context, html, no_update
+from dash import html, no_update, callback_context
 from dash.dependencies import Input, Output, State
-from models.functions import FUNCTIONS, FUNCTION_NAMES
-from models.hybrid import HybridOptimization
-from models.genetic import GeneticAlgorithm
-from models.bees import BeesAlgorithm
 import plotly.graph_objs as go
 import numpy as np
 import dash
 
+from models.functions import FUNCTIONS, FUNCTION_NAMES
+from models.genetic import GeneticAlgorithm
+from models.bees import BeesAlgorithm
+from models.hybrid import HybridOptimization
+from controllers.utils import create_surface_figure, handle_pause, get_pause_button_text
 
 def register_lr8_callbacks(app):
     app.hybrid_state = {
@@ -46,29 +47,24 @@ def register_lr8_callbacks(app):
         fig = fig if fig else go.Figure()
 
         if triggered == "hybrid-pause-button":
-            if not app.hybrid_state['running']:
-                return no_update, no_update, no_update, no_update, True, "Сначала запустите алгоритм"
-            return no_update, no_update, no_update, not interval_disabled, False, ""
+            return handle_pause(app.hybrid_state['running'], interval_disabled)
 
-        if triggered == "hybrid-function-selector" and function_key:
-            if app.hybrid_state['running']:
-                app.hybrid_state = {'history': [], 'current_step': 0, 'running': False, 'function_key': None}
-                return go.Figure(), "", False, True, True, "Работа алгоритма остановлена из-за смены функции"
+        if triggered == "hybrid-function-selector":
+            if app.hybrid_state["running"]:
+                app.hybrid_state = {
+                    'history': [],
+                    'current_step': 0,
+                    'running': False,
+                    'function_key': None
+                }
+                empty_fig = go.Figure()
+                empty_fig.update_layout(scene=dict(xaxis_title='x', yaxis_title='y', zaxis_title='f(x, y)'), margin=dict(l=0, r=0, b=0, t=30))
+                return empty_fig, "", False, True, True, "Работа алгоритма остановлена из-за смены функции"
 
-            func = FUNCTIONS[function_key]
-            x = np.linspace(-5, 5, 100)
-            y = np.linspace(-5, 5, 100)
-            X, Y = np.meshgrid(x, y)
-            Z = func(X, Y)
-
-            fig = go.Figure([go.Surface(z=Z, x=X, y=Y, colorscale="Viridis", opacity=0.8)])
-            fig.update_layout(
-                title=FUNCTION_NAMES[function_key],
-                scene=dict(xaxis_title='x', yaxis_title='y', zaxis_title='f(x, y)'),
-                margin=dict(l=0, r=0, b=0, t=40),
-                legend=dict(x=0, y=0.95, bgcolor='rgba(255,255,255,0.7)', font=dict(size=16), bordercolor='black', borderwidth=1)
-            )
-            return fig, no_update, no_update, no_update, False, ""
+            if function_key:
+                return create_surface_figure(function_key), no_update, no_update, no_update, False, ""
+            else:
+                return no_update, no_update, no_update, no_update, False, ""
 
         if triggered == "hybrid-run-button":
             if not function_key:
@@ -92,18 +88,7 @@ def register_lr8_callbacks(app):
                 'function_key': function_key
             })
 
-            x = np.linspace(-5, 5, 100)
-            y = np.linspace(-5, 5, 100)
-            X, Y = np.meshgrid(x, y)
-            Z = func(X, Y)
-
-            fig = go.Figure([go.Surface(z=Z, x=X, y=Y, colorscale="Viridis", opacity=0.8)])
-            fig.update_layout(
-                title=FUNCTION_NAMES[function_key],
-                scene=dict(xaxis_title='x', yaxis_title='y', zaxis_title='f(x, y)'),
-                margin=dict(l=0, r=0, b=0, t=40),
-                legend=dict(x=0, y=0.95, bgcolor='rgba(255,255,255,0.7)', font=dict(size=16), bordercolor='black', borderwidth=1)
-            )
+            fig = create_surface_figure(function_key)
             return fig, "Запуск гибридного алгоритма...", True, False, False, ""
 
         if triggered == "hybrid-interval" and app.hybrid_state['running']:
@@ -115,7 +100,7 @@ def register_lr8_callbacks(app):
                 best = history[-1]
                 return fig, html.Div([
                     html.P(f"Лучшее решение: x = {best['best'][0]:.4f}, y = {best['best'][1]:.4f}"),
-                    html.P(f"Значение функции: f(x, y) = {best['score']:.4f}")
+                    html.P(f"Значение функции f(x, y): {best['score']:.4f}")
                 ]), False, True, False, ""
 
             step_data = history[step]
@@ -130,22 +115,19 @@ def register_lr8_callbacks(app):
             fig.data = [trace for trace in fig.data if isinstance(trace, go.Surface)]
 
             fig.add_trace(go.Scatter3d(
-                x=population[:, 0], y=population[:, 1],
+                x=population[:, 0],
+                y=population[:, 1],
                 z=[func(x, y) for x, y in population],
                 mode='markers',
                 marker=dict(size=5, color='black'),
-                name='Популяция     ',
-                text=[f"Итерация {step + 1}"] * len(population),
-                hoverinfo='text'
+                name='Популяция         '
             ))
 
             fig.add_trace(go.Scatter3d(
                 x=[best[0]], y=[best[1]], z=[score],
                 mode='markers',
                 marker=dict(size=6, color='gold', symbol='diamond'),
-                name='Лучшая',
-                text=[f'Лучшая на итерации {step + 1}'],
-                hoverinfo='text'
+                name='Лучшая'
             ))
 
             result_block = html.Div([
@@ -169,5 +151,5 @@ def register_lr8_callbacks(app):
         Output("hybrid-pause-button", "children"),
         Input("hybrid-interval", "disabled")
     )
-    def update_pause(disabled):
-        return "Продолжить" if disabled else "Пауза"
+    def update_pause_label(disabled):
+        return get_pause_button_text(disabled)

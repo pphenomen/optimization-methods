@@ -1,9 +1,10 @@
+from dash import html, no_update, callback_context
 from dash.dependencies import Input, Output, State
+from scipy.optimize import minimize
 import plotly.graph_objs as go
 import numpy as np
-from scipy.optimize import minimize
-from dash import html, no_update, callback_context
 import dash
+from controllers.utils import create_surface_figure, handle_pause, get_pause_button_text
 
 def register_lr2_callbacks(app):
     app.optimization_state = {
@@ -33,7 +34,7 @@ def register_lr2_callbacks(app):
         if not ctx.triggered:
             raise dash.exceptions.PreventUpdate
 
-        triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
+        triggered = ctx.triggered[0]['prop_id'].split('.')[0]
 
         Q = [[4, 4], [4, 6]]
         c = [-6, -3]
@@ -49,15 +50,12 @@ def register_lr2_callbacks(app):
             for i in range(len(b))
         ]
 
-        if triggered_id == "qp-pause-button":
-            if not app.optimization_state['running']:
-                return no_update, no_update, no_update, no_update, True, "Сначала запустите алгоритм"
-            new_state = not interval_disabled
-            app.optimization_state['interval_disabled'] = new_state
-            return no_update, no_update, no_update, new_state, False, ""
+        if triggered == "qp-pause-button":
+            return handle_pause(app.optimization_state["running"], interval_disabled)
 
-        if triggered_id == "qp-run-button" and n_clicks:
+        if triggered == "qp-run-button" and n_clicks:
             history = []
+
             def callback(xk):
                 history.append({
                     'x': xk.copy(),
@@ -89,38 +87,33 @@ def register_lr2_callbacks(app):
             X, Y = np.meshgrid(np.linspace(-1, 3, 60), np.linspace(-1, 3, 60))
             Z = np.array([[objective([x, y]) for x, y in zip(row_x, row_y)] for row_x, row_y in zip(X, Y)])
 
-            fig = go.Figure([
-                go.Surface(z=Z, x=X, y=Y, colorscale="Viridis", opacity=0.8)
-            ])
-            fig.update_layout(
-                scene=dict(xaxis_title='x1', yaxis_title='x2', zaxis_title='f(x1,x2)'),
-                margin=dict(l=0, r=0, b=0, t=40)
-            )
+            fig = go.Figure([go.Surface(z=Z, x=X, y=Y, colorscale="Viridis", opacity=0.8)])
+            fig.update_layout(scene=dict(xaxis_title='x1', yaxis_title='x2', zaxis_title='f(x1,x2)'), margin=dict(l=0, r=0, b=0, t=40))
 
             return fig, "Запуск оптимизации...", True, False, False, ""
 
-        if triggered_id == 'interval-component' and app.optimization_state['running']:
-            history = app.optimization_state['history']
-            current_step = app.optimization_state['current_step']
-            result = app.optimization_state['result']
+        if triggered == "interval-component" and app.optimization_state["running"]:
+            step = app.optimization_state["current_step"]
+            history = app.optimization_state["history"]
+            result = app.optimization_state["result"]
 
-            if current_step >= len(history):
-                app.optimization_state['running'] = False
+            if step >= len(history):
+                app.optimization_state["running"] = False
                 return current_figure, html.Div([
                     html.P(f"Оптимальное решение: x1 = {result.x[0]:.4f}, x2 = {result.x[1]:.4f}"),
                     html.P(f"Значение функции: {result.fun:.4f}"),
                     html.P(f"Итераций: {result.nit}")
                 ]), False, True, False, ""
 
-            point = history[current_step]
-            app.optimization_state['current_step'] += 1
+            point = history[step]
+            app.optimization_state["current_step"] += 1
 
             fig = go.Figure(current_figure)
             fig.data = [trace for trace in fig.data if isinstance(trace, go.Surface)]
 
-            traj_x = [h['x'][0] for h in history[:current_step+1]]
-            traj_y = [h['x'][1] for h in history[:current_step+1]]
-            traj_z = [h['f'] for h in history[:current_step+1]]
+            traj_x = [h['x'][0] for h in history[:step+1]]
+            traj_y = [h['x'][1] for h in history[:step+1]]
+            traj_z = [h['f'] for h in history[:step+1]]
 
             fig.add_trace(go.Scatter3d(
                 x=traj_x, y=traj_y, z=traj_z,
@@ -131,12 +124,11 @@ def register_lr2_callbacks(app):
             ))
 
             result_text = html.Div([
-                html.P(f"Итерация: {current_step}/{len(history)}"),
+                html.P(f"Итерация: {step + 1}/{len(history)}"),
                 html.P(f"Текущая точка: x1 = {point['x'][0]:.4f}, x2 = {point['x'][1]:.4f}"),
                 html.P(f"Значение функции: {point['f']:.4f}"),
                 html.P(f"Ограничения: {[f'{c:.2f}' for c in point['constraints']]}"),
             ])
-
             return fig, result_text, no_update, no_update, False, ""
 
         return no_update, no_update, no_update, no_update, False, ""
@@ -145,12 +137,12 @@ def register_lr2_callbacks(app):
         Output("interval-component", "interval"),
         Input("qp-animation-speed", "value")
     )
-    def update_qp_animation_speed(speed):
+    def update_qp_speed(speed):
         return speed
 
     @app.callback(
         Output("qp-pause-button", "children"),
         Input("interval-component", "disabled")
     )
-    def update_pause_button_text(disabled):
-        return "Продолжить" if disabled else "Пауза"
+    def update_pause_label(disabled):
+        return get_pause_button_text(disabled)
