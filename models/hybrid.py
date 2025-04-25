@@ -30,9 +30,9 @@ class HybridOptimization:
             updated_population = np.vstack((updated_population, np.array([r[:2] for r in refined])))
             pop = updated_population
 
-            best_idx = np.argmin(self.genetic._fitness(pop))
+            best_idx = np.argmin(fitness)
             best = pop[best_idx]
-            best_value = self.func(best[0], best[1])
+            best_value = fitness[best_idx]
 
             self.history.append({
                 "iteration": gen,
