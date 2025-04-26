@@ -93,6 +93,9 @@ def register_lr7_callbacks(app):
             return fig, "Запуск бактериальной оптимизации...", True, False, False, ""
 
         if triggered == "bfoa-interval" and app.bfoa_state['running']:
+            if not app.bfoa_state['running']:
+                return no_update, no_update, no_update, no_update, False, ""
+    
             step = app.bfoa_state['current_step']
             history = app.bfoa_state['history']
             func = FUNCTIONS[app.bfoa_state['function_key']]
