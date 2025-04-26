@@ -93,9 +93,6 @@ def register_lr7_callbacks(app):
             return fig, "Запуск бактериальной оптимизации...", True, False, False, ""
 
         if triggered == "bfoa-interval" and app.bfoa_state['running']:
-            if not app.bfoa_state['running']:
-                return no_update, no_update, no_update, no_update, False, ""
-    
             step = app.bfoa_state['current_step']
             history = app.bfoa_state['history']
             func = FUNCTIONS[app.bfoa_state['function_key']]
@@ -104,14 +101,26 @@ def register_lr7_callbacks(app):
                 app.bfoa_state['running'] = False
                 best = history[-1]['best_solution']
                 score = history[-1]['best_score']
-                displayed = 0.0 if abs(score) < 1e-8 else score
+                displayed = 0.0 if abs(score) <= 1e-6 else score
                 return fig, html.Div([
-                    html.P(f"Лучшее решение: x = {best[0]:.4f}, y = {best[1]:.4f}"),
-                    html.P(f"Значение функции: {displayed:.4f}")
+                    html.P(f"Лучшее решение: x = {best[0]:.6f}, y = {best[1]:.6f}"),
+                    html.P(f"Значение функции: {displayed:.6f}"),
+                    html.P(f"Алгоритм выполнил все {len(history)} итераций.")
                 ]), False, True, False, ""
 
             step_data = history[step]
             app.bfoa_state['current_step'] += 1
+
+            # Автоостановка, если достигли нуля
+            if abs(step_data['best_score']) <= 1e-6:
+                app.bfoa_state['running'] = False
+                best = step_data['best_solution']
+                displayed = 0.0
+                return fig, html.Div([
+                    html.P(f"Решение найдено на {step_data['iteration'] + 1}-й итерации!"),
+                    html.P(f"Координаты: x = {best[0]:.6f}, y = {best[1]:.6f}"),
+                    html.P(f"Значение функции: {displayed:.6f}")
+                ]), False, True, False, ""
 
             fig = go.Figure(fig)
             fig.data = [trace for trace in fig.data if isinstance(trace, go.Surface)]
@@ -122,7 +131,7 @@ def register_lr7_callbacks(app):
                 z=[func(p[0], p[1]) for p in step_data['population']],
                 mode='markers',
                 marker=dict(size=5, color='black'),
-                name='Бактерии'
+                name='Бактерии  '
             ))
 
             fig.add_trace(go.Scatter3d(
@@ -136,8 +145,8 @@ def register_lr7_callbacks(app):
 
             result_block = html.Div([
                 html.P(f"Итерация: {step_data['iteration'] + 1}/{len(history)}"),
-                html.P(f"Лучшая бактерия: x = {step_data['best_solution'][0]:.4f}, y = {step_data['best_solution'][1]:.4f}"),
-                html.P(f"f(x, y) = {step_data['best_score']:.4f}")
+                html.P(f"Лучшая бактерия: x = {step_data['best_solution'][0]:.6f}, y = {step_data['best_solution'][1]:.6f}"),
+                html.P(f"f(x, y) = {step_data['best_score']:.6f}")
             ])
 
             return fig, result_block, no_update, no_update, False, ""
